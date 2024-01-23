@@ -19,37 +19,21 @@ RUN pip install -U pip
 
 RUN conda clean --all
 
-# Install MMCV
-# RUN ["/bin/bash", "-c", "pip install --no-cache-dir mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu${CUDA//./}/torch${PYTORCH}/index.html"]
-RUN pip install -U openmim
-RUN mim install mmcv-full==1.4.4
+RUN pip install \
+    numpy==1.21 \
+    tqdm \
+    open3d==0.9.0.0 \
+    einops==0.3.2 \
+    scikit-learn==1.0.1 \
+    tqdm==4.62.3 \
+    h5py==3.6.0
 
-# Install MMSegmentation
-RUN git clone https://github.com/open-mmlab/mmsegmentation.git /mmsegmentation
-RUN git clone --depth 1 --branch v0.22.1 https://github.com/open-mmlab/mmsegmentation.git
-WORKDIR /mmsegmentation
-ENV FORCE_CUDA="1"
-RUN pip install -r requirements.txt
-RUN pip install --no-cache-dir -e .
+# Install Grad-PU
+RUN apt update
+RUN apt install -y cmake libcgal-dev
+ADD . /Grad-PU
+RUN cd /Grad-PU/models/Chamfer3D && python setup.py install
+RUN cd /Grad-PU/models/pointops && python setup.py install
+RUN cd /Grad-PU/evaluation_code && /bin/bash compile.sh
 
-# RUN conda init
-# RUN conda create -n completionformer python=3.8 -y
-# RUN conda activate completionformer
-# RUN pip install torch==1.10.1+cu113 torchvision==0.11.2+cu113 torchaudio==0.10.1+cu113
-# RUN pip install mmcv-full==1.4.4 mmsegmentation==0.22.1
-# RUN pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
-# RUN pip install -U openmim
-# RUN mim install mmcv-full==1.4.4
-# RUN mim install mmsegmentation==0.22.1
-
-RUN pip install timm tqdm thop tensorboardX opencv-python ipdb h5py ipython Pillow==9.5.0
-
-# Install CompletionFormer
-ADD . /CompletionFormer
-RUN ls -l /CompletionFormer
-# RUN git clone https://github.com/DenDen047/CompletionFormer.git /CompletionFormer
-WORKDIR /CompletionFormer/src/model/deformconv
-ENV CUDA_HOME /usr/local/cuda-11.3
-RUN bash make.sh
-
-WORKDIR /workspace
+WORKDIR /Grad-PU

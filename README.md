@@ -28,7 +28,7 @@ h5py==3.6.0
 
 * Install the built-in libraries
 
-```
+```bash
 cd models/Chamfer3D
 python setup.py install
 cd ../pointops
@@ -38,12 +38,13 @@ python setup.py install
 * Compile the evaluation_code for metric calculation (optional)
 
 To calculate the CD, HD and P2F metrics, you need to install the CGAL library (please follow the [PU-GAN](https://github.com/liruihui/PU-GAN) repo) and virtual environment of PU-GCN (please follow the [PU-GCN](https://github.com/guochengqian/PU-GCN) repo) first. And then you also need to compile the `evaluation_code` folder.
-```
+```bash
 cd evaluation_code
 bash compile.sh
 ```
 
 These commands are tested on an ubuntu 16.04 system.
+
 
 ## Data Preparation
 
@@ -51,7 +52,7 @@ First download the PU-GAN ([train set](https://drive.google.com/open?id=13ZFDffO
 
 * PU-GAN test point cloud generation
 
-```
+```bash
 # 4X, generated files will be saved at ./data/PU-GAN/test_pointcloud/input_2048_4X by default
 python prepare_pugan.py --input_pts_num 2048 --gt_pts_num 8192
 # 16X, generated files will be saved at ./data/PU-GAN/test_pointcloud/input_2048_16X by default
@@ -59,10 +60,10 @@ python prepare_pugan.py --input_pts_num 2048 --gt_pts_num 32768
 # 5X, generated files will be saved at ./data/PU-GAN/test_pointcloud/input_2048_5X by default
 python prepare_pugan.py --input_pts_num 2048 --gt_pts_num 10240
 ```
-where `input_pts_num` denotes the point number of input low-res point cloud, `gt_pts_num` denotes the point number of ground truth high-res point cloud, and you can modify these two arguments to obtain various upsampling rates or input sizes. 
+where `input_pts_num` denotes the point number of input low-res point cloud, `gt_pts_num` denotes the point number of ground truth high-res point cloud, and you can modify these two arguments to obtain various upsampling rates or input sizes.
 
 You can also use the `noise_level` argument to generate the noisy low-res input.
-```
+```bash
 # 4X, noise_level=0.01, generated files will be saved at ./data/PU-GAN/test_pointcloud/input_2048_4X_noise_0.01 by default
 python prepare_pugan.py --input_pts_num 2048 --gt_pts_num 8192 --noise_level 0.01
 ```
@@ -70,7 +71,7 @@ python prepare_pugan.py --input_pts_num 2048 --gt_pts_num 8192 --noise_level 0.0
 The final file structure of `data` folder is shown as follow:
 
 ```
-data  
+data
 ├───PU-GAN
 │   ├───test # test mesh file
 │   ├───test_pointcloud # generated test point cloud file
@@ -86,7 +87,32 @@ data
 │   │     ├───input_2048
 │   │     ...
 │   └───train
-│   │     └───pu1k_poisson_256_poisson_1024_pc_2500_patch50_addpugan.h5 
+│   │     └───pu1k_poisson_256_poisson_1024_pc_2500_patch50_addpugan.h5
+```
+
+
+## Docker
+
+build the docker image.
+
+```bash
+$ docker build -t denden047/grad_pu .
+```
+
+Then, you can run a container.
+
+```bash
+$ docker run -it --rm \
+    --gpus device=1 \
+    -v /data/naoya/Grad-PU:/data \
+    denden047/grad_pu /bin/bash
+
+# preparing the dataset in the container
+$ python prepare_pugan.py \
+    --input_pts_num 2048 \
+    --gt_pts_num 32768 \
+    --mesh_dir /data/PU-GAN/test/ \
+    --save_dir /data/PU-GAN/test_pointcloud
 ```
 
 ## Quick Start
@@ -94,7 +120,7 @@ data
 We have provided the pretarined models in the `pretrained_model` folder, so you can directly use them to reproduce the results.
 
 * PU-GAN
-```
+```bash
 # 4X, upsampled point clouds will be saved at ./pretrained_model/pugan/test/4X
 python test.py --dataset pugan --test_input_path ./data/PU-GAN/test_pointcloud/input_2048_4X/input_2048/ --ckpt_path ./pretrained_model/pugan/ckpt/ckpt-epoch-60.pth --save_dir 4X --up_rate 4
 # 16X, upsampled point clouds will be saved at ./pretrained_model/pugan/test/16X
@@ -116,7 +142,7 @@ Later you need to shift to the virtual environment and code folder of [PU-GCN](h
 
 **Note:** the `evaluate.py` script isn't compatible with our environment.
 
-```
+```bash
 python evaluate.py --pred path_to_upsampled_point_clouds --gt path_to_ground_truth_high-res_point_clouds --save_path calculated_metrics_save_path
 ```
 
@@ -135,12 +161,12 @@ Similarly, you can utilize the following commands to calculate the metrics for t
 cd evaluation_code
 python write_eval_script.py --dataset pu1k --upsampled_pcd_path ../pretrained_model/pu1k/test/4X
 bash eval_pu1k.sh
-# first shift to the virtual environment of PU-GCN, and then run the evaluate.py script 
+# first shift to the virtual environment of PU-GCN, and then run the evaluate.py script
 python evaluate.py --pred path_to_upsampled_point_clouds --gt path_to_ground_truth_high-res_point_clouds --save_path calculated_metrics_save_path
 ```
 You should fill the `pred`, `gt` and `save_path` arguments of `evaluate.py` script accordingly. And finally you can get the `evaluation.csv` and `finalresult.text` files in the `save_path` folder.
 
-**Note:** If you want to use different input files, checkpoints, upsampling rates, etc, you should modify those aforementioned arguments accordingly. 
+**Note:** If you want to use different input files, checkpoints, upsampling rates, etc, you should modify those aforementioned arguments accordingly.
 
 
 ## Training
@@ -159,7 +185,7 @@ python train.py --dataset pugan
 python train.py --dataset pu1k
 ```
 
-The checkpoints and log files will be saved at `./output/experiment_id/ckpt` and `./output/experiment_id/log` folders respectively. And for evaluation, you can refer to the `Quick Start` section. 
+The checkpoints and log files will be saved at `./output/experiment_id/ckpt` and `./output/experiment_id/log` folders respectively. And for evaluation, you can refer to the `Quick Start` section.
 
 ## Acknowledgments
 
