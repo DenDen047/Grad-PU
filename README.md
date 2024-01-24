@@ -113,6 +113,14 @@ $ python prepare_pugan.py \
     --gt_pts_num 32768 \
     --mesh_dir /data/PU-GAN/test/ \
     --save_dir /data/PU-GAN/test_pointcloud
+
+# test with PU-GAN dataset
+$ python test.py \
+    --dataset pugan \
+    --test_input_path /data/PU-GAN/test_pointcloud/input_2048_16X/input_2048/ \
+    --ckpt_path ./pretrained_model/pugan/ckpt/ckpt-epoch-60.pth  \
+    --save_dir 16X \
+    --up_rate 16
 ```
 
 ## Quick Start
